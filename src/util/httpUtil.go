@@ -3,6 +3,7 @@ package util
 import (
 	"awesomeproject/src/dict"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -38,29 +39,24 @@ func CheckServerPortUse(ip *string, port *int) bool {
 }
 
 // 发送Get请求
-func SendHttpGet(url *string, result interface{}) *string {
-	var msg string
-	if url == nil || IsEmpty(url) {
-		msg = fmt.Sprint("请求参数不合法")
-		return &msg
+func SendHttpGet(url *string, result interface{}) error {
+	if IsEmpty(url) {
+		return errors.New("url cannot be empty")
 	}
 
 	resp, err := http.Get(*url)
 	if err != nil {
-		msg = fmt.Sprintf("获取本地服务列表失败 [%v]", err)
-		return &msg
+		return err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		msg = fmt.Sprintf("读取响应数据失败 [%v]", err)
-		return &msg
+		return err
 	}
 
 	err = json.Unmarshal(body, result)
 	if err != nil {
-		msg = fmt.Sprintf("json解析失败 [%v]", err)
-		return &msg
+		return err
 	}
 	return nil
 }
