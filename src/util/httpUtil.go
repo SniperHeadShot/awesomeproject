@@ -38,25 +38,57 @@ func CheckServerPortUse(ip *string, port *int) bool {
 	return err == nil
 }
 
-// 发送Get请求
-func SendHttpGet(url *string, result interface{}) error {
-	if IsEmpty(url) {
+type HttpRequestStrut struct {
+	Method string
+	Url    *string
+	Header *map[string]string
+}
+
+func (httpRequestStrut HttpRequestStrut) verityPass() bool {
+	return IsNotEmpty(&httpRequestStrut.Method) && IsNotEmpty(httpRequestStrut.Url)
+}
+
+// 发送Http请求
+func SendHttpRequest(httpRequestStrut *HttpRequestStrut, result interface{}) error {
+	var (
+		request       *http.Request
+		response      *http.Response
+		responseBytes []byte
+		err           error
+	)
+	if httpRequestStrut == nil || !httpRequestStrut.verityPass() {
 		return errors.New("url cannot be empty")
 	}
 
-	resp, err := http.Get(*url)
+	// 构造请求
+	request, err = http.NewRequest(httpRequestStrut.Method, *httpRequestStrut.Url, nil)
+	if err != nil {
+		return nil
+	}
+
+	// 设置header
+	if httpRequestStrut.Header != nil && len(*httpRequestStrut.Header) > 0 {
+		for key, value := range *httpRequestStrut.Header {
+			request.Header[key] = []string{value}
+		}
+	}
+
+	// 请求
+	response, err = http.DefaultClient.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	// 读取结果
+	responseBytes, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(responseBytes, result)
 	if err != nil {
 		return err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(body, result)
-	if err != nil {
-		return err
-	}
 	return nil
 }

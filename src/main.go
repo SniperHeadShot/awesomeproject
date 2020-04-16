@@ -1,6 +1,29 @@
 package main
 
+import (
+	"awesomeproject/src/util"
+	"fmt"
+	"net/http"
+)
+
 func main() {
+	url := "http://192.168.9.237:10080/pmdbsvr/project/list?page=1&limit=10"
+	//header := make(map[string]string)
+	//header["projectUuid"] = "ccac3a91bac54c02a3e3926268d16e5b"
+
+	httpRequestStrut := util.HttpRequestStrut{
+		Method: http.MethodGet,
+		Url:    &url,
+		//Header: &header,
+	}
+
+	var result util.CommonResult
+
+	err := util.SendHttpRequest(&httpRequestStrut, &result)
+	if err != nil {
+		fmt.Printf("%v", err)
+	}
+
 	// java 重启demo
 	//ip := "192.168.9.237"
 	//port := 22
